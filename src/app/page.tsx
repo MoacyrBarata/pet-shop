@@ -1,7 +1,35 @@
-export default function Home() {
+import { AppointmentForm } from '@/components/appointment-form/appointment-form';
+import { PeriodSection } from '@/components/period-section/period-section';
+import { prisma } from '@/lib/prisma';
+
+import { groupAppointmentsByPeriod } from '@/utils/appointment-utils';
+import { APPOINTMENT_MOCK } from '@/utils/mock-data';
+
+export default async function Home() {
+  const appoint = await prisma.appointment.findMany();
+
+  const periods = groupAppointmentsByPeriod(APPOINTMENT_MOCK);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <h2>Olá</h2>
+    <div className="bg-background-primary p-6">
+      <div className="flex items-center justify-between md:mb-8">
+        <div>
+          <h1 className="text-title-size text-content-primary mb-2">
+            Sua Agenda
+          </h1>
+          <p className="text-paragraph-medium-size">
+            Aqui você pode ver todos os clientes e serviços agendados para hoje.
+          </p>
+        </div>
+      </div>
+      <div className="pb-24 md:pb-0">
+        {periods.map((period, index) => (
+          <PeriodSection period={period} key={index} />
+        ))}
+      </div>
+      <div>
+        <AppointmentForm />
+      </div>
     </div>
   );
 }
