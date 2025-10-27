@@ -26,6 +26,7 @@ import {
   ChevronDownIcon,
   Clock,
   Dog,
+  Loader2,
   Phone,
   User,
 } from 'lucide-react';
@@ -296,8 +297,15 @@ export function AppointmentForm() {
               />
             </div>
             <div className="flex justify-end">
-              <Button type="submit" variant="brand">
-                {form.formState.isSubmitting}
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Agendar
               </Button>
             </div>
           </form>
