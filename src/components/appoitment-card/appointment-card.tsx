@@ -1,8 +1,23 @@
+'use client';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointments';
 import { AppointmentForm } from '../appointment-form/appointment-form';
 import { Button } from '../ui/button';
-import { Pen } from 'lucide-react';
+import { LoaderIcon, Pen, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { deleteAppointment } from '@/app/actions';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 type AppointmentCardProps = {
   appointment: Appointment;
@@ -13,6 +28,19 @@ export function AppointmentCard({
   appointment,
   isFirstInSection = false,
 }: AppointmentCardProps) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = async () => {
+    startTransition(async function () {
+      const result = await deleteAppointment(appointment.id);
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success('Agendamento removido');
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -48,6 +76,31 @@ export function AppointmentCard({
             <Pen size={16} />
           </Button>
         </AppointmentForm>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="remove" size="icon">
+              <Trash2 size={16} />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover agendamento</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover agendamento?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+                {isPending && (
+                  <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Confirmar remoção
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
