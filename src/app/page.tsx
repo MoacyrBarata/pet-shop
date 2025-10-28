@@ -5,10 +5,27 @@ import { prisma } from '@/lib/prisma';
 
 import { groupAppointmentsByPeriod } from '@/utils/appointment-utils';
 import { APPOINTMENT_MOCK } from '@/utils/mock-data';
+import { endOfDay, parseISO, startOfDay } from 'date-fns';
 
-export default async function Home() {
-  const appointments = await prisma.appointment.findMany();
-  console.log(appointments);
+type HomeProps = {
+  searchParams: Promise<{ date?: string }>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const { date } = await searchParams;
+  const selectDate = date ? parseISO(date) : new Date();
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      scheduleAt: {
+        gte: startOfDay(selectDate),
+        lte: endOfDay(selectDate),
+      },
+    },
+    orderBy: {
+      scheduleAt: 'asc',
+    },
+  });
 
   const periods = groupAppointmentsByPeriod(appointments);
 
