@@ -45,8 +45,9 @@ import {
   SelectValue,
 } from '../ui/select';
 import { toast } from 'sonner';
-import { createAppointment } from '@/app/actions';
-import { useState } from 'react';
+import { createAppointment, updateAppointment } from '@/app/actions';
+import React, { useEffect, useState } from 'react';
+import type { Appointment } from '@/types/appointments';
 
 const appointmentsFormSchema = z
   .object({
@@ -73,7 +74,15 @@ const appointmentsFormSchema = z
 
 type AppointmentsFormSchema = z.infer<typeof appointmentsFormSchema>;
 
-export function AppointmentForm() {
+type AppointmentCardProps = {
+  appointment?: Appointment;
+  children?: React.ReactNode;
+};
+
+export function AppointmentForm({
+  appointment,
+  children,
+}: AppointmentCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<AppointmentsFormSchema>({
     resolver: zodResolver(appointmentsFormSchema),
@@ -94,27 +103,36 @@ export function AppointmentForm() {
     scheduleAt.setHours(Number(hour));
     scheduleAt.setMinutes(Number(minute), 0, 0);
 
-    const result = await createAppointment({
-      ...data,
-      scheduleAt,
-    });
+    const isEdit = !!appointment?.id;
+
+    const result = isEdit
+      ? await updateAppointment(appointment.id, {
+          ...data,
+          scheduleAt,
+        })
+      : await createAppointment({
+          ...data,
+          scheduleAt,
+        });
 
     if (result?.error) {
       toast.error(result.error);
       return;
     }
 
-    toast.success(`Agendamento criado.`);
+    toast.success(`Agendamento ${isEdit ? 'atualizado' : 'criado'}`);
     setIsOpen(false);
 
     form.reset();
   }
 
+  useEffect(() => {
+    form.reset(appointment);
+  }, [appointment, form]);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand">Novo Agendamento</Button>
-      </DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
       <DialogContent
         variant="appointment"
