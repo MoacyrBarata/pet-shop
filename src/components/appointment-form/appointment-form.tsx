@@ -44,6 +44,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { toast } from 'sonner';
+import { createAppointment } from '@/app/actions';
+import { useState } from 'react';
 
 const appointmentsFormSchema = z
   .object({
@@ -71,6 +74,7 @@ const appointmentsFormSchema = z
 type AppointmentsFormSchema = z.infer<typeof appointmentsFormSchema>;
 
 export function AppointmentForm() {
+  const [isOpen, setIsOpen] = useState(false);
   const form = useForm<AppointmentsFormSchema>({
     resolver: zodResolver(appointmentsFormSchema),
     defaultValues: {
@@ -83,12 +87,31 @@ export function AppointmentForm() {
     },
   });
 
-  function onSubmit(data: AppointmentsFormSchema) {
-    console.log(data);
+  async function onSubmit(data: AppointmentsFormSchema) {
+    const [hour, minute] = data.time.split(':');
+
+    const scheduleAt = new Date(data.scheduleAt);
+    scheduleAt.setHours(Number(hour));
+    scheduleAt.setMinutes(Number(minute), 0, 0);
+
+    const result = await createAppointment({
+      ...data,
+      scheduleAt,
+    });
+
+    if (result?.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(`Agendamento criado.`);
+    setIsOpen(false);
+
+    form.reset();
   }
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="brand">Novo Agendamento</Button>
       </DialogTrigger>
@@ -125,7 +148,7 @@ export function AppointmentForm() {
                       <Input
                         placeholder="Nome do tutor"
                         className="pl-10"
-                        {...field}
+                        {...field.field}
                       />
                     </div>
                   </FormControl>
@@ -159,7 +182,7 @@ export function AppointmentForm() {
                           focus-visible:ring-border-brand disabled:cursor-not-allowed disabled:opacity-50
                           hover:border-border-secondary focus:border-border-brand focus-visible:border-border-brand
                           aria-invalid:ring-destructive/20 aria-invalid:border-destructive"
-                        {...field}
+                        {...field.field}
                       />
                     </div>
                   </FormControl>
@@ -172,7 +195,7 @@ export function AppointmentForm() {
             <FormField
               control={form.control}
               name="petName"
-              render={(field) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-label-medium-size text-content-primary">
                     Nome do pet
@@ -191,7 +214,6 @@ export function AppointmentForm() {
                     </div>
                   </FormControl>
                   <FormMessage />
-                  doc
                 </FormItem>
               )}
             />
@@ -199,7 +221,7 @@ export function AppointmentForm() {
             <FormField
               control={form.control}
               name="description"
-              render={(field) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-label-medium-size text-content-primary">
                     Descrição do serviço

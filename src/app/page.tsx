@@ -6,9 +6,10 @@ import { groupAppointmentsByPeriod } from '@/utils/appointment-utils';
 import { APPOINTMENT_MOCK } from '@/utils/mock-data';
 
 export default async function Home() {
-  const appoint = await prisma.appointment.findMany();
+  const appointments = await prisma.appointment.findMany();
+  console.log(appointments);
 
-  const periods = groupAppointmentsByPeriod(APPOINTMENT_MOCK);
+  const periods = groupAppointmentsByPeriod(appointments);
 
   return (
     <div className="bg-background-primary p-6">

@@ -12,7 +12,7 @@
 
 # database
 /pgdata
-/pgdata*
+
 
 # testing
 /coverage
