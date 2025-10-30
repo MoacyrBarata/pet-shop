@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { calculatePeriod } from '@/utils/appointment-utils';
+import { calculatePeriod, formatDateTime } from '@/utils/appointment-utils';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
 
@@ -20,7 +20,7 @@ export async function createAppointment(data: CreateAppointmentSchema) {
     const { scheduleAt, description, petName, tutorName, phone } =
       createAppointmentSchema.parse(data);
 
-    const hour = scheduleAt.getHours();
+    const hour = parseInt(formatDateTime(scheduleAt));
 
     const { isMorning, isAfternoon, isNight } = calculatePeriod(hour);
 
@@ -64,7 +64,7 @@ export async function updateAppointment(
     const { scheduleAt, description, petName, tutorName, phone } =
       createAppointmentSchema.parse(data);
 
-    const hour = scheduleAt.getHours();
+    const hour = parseInt(formatDateTime(scheduleAt));
     const { isAfternoon, isMorning, isNight } = calculatePeriod(hour);
 
     if (!isMorning && !isAfternoon && !isNight) {
